@@ -1,0 +1,31 @@
+import RPi.GPIO as GPIO
+import TempProbe
+
+
+GPIO.setmode(GPIO.BCM)   # set up BCM port numbering scheme
+GPIO.setwarnings(False)  # disable warnings
+
+
+class BinaryObject:
+
+    # THESE CAN BE CHANGED TO FIT OUR WIRING
+    pin_array = [14, 15, 18, 17, 27, 22, 10, 9] # pin array for leds. MSB is the first number (ie, 14)
+
+    def __init__(self, p):
+        self.pin_array = p
+        for i in self.pin_array:            # loop to set all pins to output
+            GPIO.setup(i, GPIO.OUT)
+
+    def show_binary(self):
+        x = TempProbe.read_temp()                   # set x to the temp value
+        x = bin(x)[2:]                              # convert from 0b00000000 format to 00000000 (ie. remove the 0b)
+        x = "0" * (8 - len(x)) + x                  # pad the binary number with extra 0 to fit 8bit format
+
+        # loop through the bin number and check values
+        for i in range(8):
+            if x[i] == "1":
+                GPIO.output(self.pin_array[i], True)        # if value is 1, set output of pin to true (HIGH)
+            else:
+                GPIO.output(self.pin_array[i], False)       # if value is 0, set output of pin to fale (LOW)
+
+        GPIO.cleanup()
