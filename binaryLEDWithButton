@@ -1,0 +1,60 @@
+import RPi.GPIO as GPIO
+import self as self
+import TempProbe
+
+GPIO.setmode(GPIO.BCM)  # set up BCM port numbering scheme
+GPIO.setwarnings(False)
+
+temp_value_as_decimal = 0  # integer value for the temperature
+state = GPIO.input(16)  # variable used to check the state of the button
+
+# pins to connect to leds (right to left)
+# NOTE: these can be changed to work with how we set up the writing
+# THESE CAN BE CHANGED TO FIT OUR WIRING
+pin_array = [14, 15, 18, 17, 27, 22, 10, 9]  # pin array for leds. MSB is the first number (ie, 14)
+
+
+def __init__(self, p):
+    self.pin_array = p
+    for i in self.pin_array:  # loop to set all pins to output
+        GPIO.setup(i, GPIO.OUT)
+
+
+def setup_button():
+
+    # use pin 16 for button, set at an INPUT
+    GPIO.setup(16, GPIO.IN)
+
+    # GPIO pin 16 is pulled HIGH (up) to stop false signals
+    # The signal will be HIGH all the time until the button is pressed
+    # connecting the port to GND (pin 6), which makes it LOW. This avoids false event detection.
+    GPIO.setup(16, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+    # Set all pins as output
+    for pin in pin_array:
+        GPIO.setup(pin, GPIO.OUT)
+
+
+def display_led(state):
+    if state == True:
+        show_binary(self)          # call function to display binary to LEDs
+
+    # else if state is set to false, set button state to remain LOW
+    else:
+        GPIO.output(16, GPIO.LOW)
+
+
+def show_binary(self):
+    x = TempProbe.read_temp()  # set x to the temp value
+    x = bin(x)[2:]  # convert from 0b00000000 format to 00000000 (ie. remove the 0b)
+    x = "0" * (8 - len(x)) + x  # pad the binary number with extra 0 to fit 8bit format
+
+    # loop through the bin number and check values
+    for i in range(8):
+        if x[i] == "1":
+            GPIO.output(self.pin_array[i], True)  # if value is 1, set output of pin to true (HIGH)
+        else:
+            GPIO.output(self.pin_array[i], False)  # if value is 0, set output of pin to fale (LOW)
+
+
+GPIO.cleanup()  # clean up GPIO data on used pins
